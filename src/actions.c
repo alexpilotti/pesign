@@ -102,6 +102,7 @@ list_signatures(pesign_context *ctx)
 	void *data;
 	ssize_t datalen;
 	int nsigs = 0;
+	int certcount = 1;
 
 	rc = 0;
 	while (1) {
@@ -187,6 +188,20 @@ list_signatures(pesign_context *ctx)
 
 			printf("There were%s certs or crls included.\n",
 				SEC_PKCS7ContainsCertsOrCrls(cinfo) ? "" : " no");
+
+                        // TODO: clean up and put in separate function
+                        SECItem** certs = SEC_PKCS7GetCertificateList(cinfo);
+                        int chaincount = 0;
+                        while(certs[chaincount]) {
+                            char filename[100];
+                            sprintf(filename, "cert_%d_%d.cer", certcount, chaincount);
+                            FILE* fp = fopen(filename, "wb");
+                            fwrite(certs[chaincount]->data, 1, certs[chaincount]->len, fp);
+                            fclose(fp);
+                            chaincount++;
+                        }
+
+                        certcount++;
 
 			SEC_PKCS7DestroyContentInfo(cinfo);
 		}
